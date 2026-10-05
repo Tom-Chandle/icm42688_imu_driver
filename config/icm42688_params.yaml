@@ -1,0 +1,48 @@
+/**:
+  ros__parameters:
+    # 发布的sensor_msgs/msg/Imu消息配置。
+    frame_id: "imu_link"
+    topic: "/imu/data_raw"
+
+    # true：按IIO name自动查找，推荐开启，设备编号可能随probe顺序变化。
+    auto_detect: true
+
+    # auto_detect=false时使用下面三个sysfs路径。
+    acc_device_path: "/sys/bus/iio/devices/iio:device2"
+    gyro_device_path: "/sys/bus/iio/devices/iio:device1"
+    imu_device_path: "/sys/bus/iio/devices/iio:device3"
+
+    # 输出数据率（Hz），实际可选值以sampling_frequency_available为准。
+    # 当前驱动陀螺仪：12.5、25、50、100、200、1000、2000、4000。
+    # 当前驱动加速度计：1.5625、3.125、6.25、12.5、25、50、100、
+    #                   200、1000、2000、4000。
+    # ICM42688手册还定义了500Hz和更高ODR，但当前驱动没有全部暴露。
+    acc_sampling_frequency: 200.0
+    gyro_sampling_frequency: 200.0
+
+    # UI低通滤波带宽，对应GYRO_ACCEL_CONFIG0寄存器。
+    # 可选：odr-div-2、odr-div-4、odr-div-5、odr-div-8、
+    #       odr-div-10、odr-div-16、odr-div-20、odr-div-40。
+    # 例如ODR=200Hz且选择odr-div-10时，带宽约为20Hz。
+    accel_filter: "odr-div-10"
+    gyro_filter: "odr-div-10"
+
+    # 单位为m/s^2/LSB和rad/s/LSB。0表示保持内核当前量程并回读实际scale。
+    # 可用值见in_accel_scale_available和in_anglvel_scale_available。
+    acc_scale: 0.0
+    gyro_scale: 0.0
+
+    # 每个IIO kfifo容纳的扫描记录数量。
+    buffer_length: 1
+
+    # IIO时间戳时钟。无论选择哪一种，取时点都在ICM42688硬IRQ上半部，
+    # 不是SPI读取、用户态read或ROS发布时刻。
+    # monotonic从开机计时且不受NTP影响，适合VIO；
+    # realtime是Unix墙上时间，可能因系统校时跳变。
+    timestamp_clock: "monotonic"
+
+    # 等待IIO buffer的超时；超时不会改成寄存器轮询。
+    poll_timeout_ms: 15
+
+    # 两路ODR必须相同。内核只组合同一硬件FIFO packet中的accel+gyro，
+    # ROS不做双队列时间容差匹配。
